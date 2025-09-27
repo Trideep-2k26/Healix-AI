@@ -33,34 +33,34 @@ graph LR
 
 ### What Makes It Special?
 
-- **🤖 Smart Classification**: Gemini AI categorizes health concerns into 15+ medical specialties
-- **💰 Indian Context**: Benefits with realistic INR coverage amounts (₹1,000 - ₹50,000)
-- **🎯 Action-Oriented**: 3-step plans focusing on benefit *utilization*, not claims processing
-- **⚡ Zero Backend**: Fully client-side with localStorage persistence
-- **🌗 Stunning UI**: Glassmorphism, dark mode, and Lottie animations
+- ** Smart Classification**: Gemini AI categorizes health concerns into 15+ medical specialties
+- ** Indian Context**: Benefits with realistic INR coverage amounts (₹1,000 - ₹50,000)
+- ** Action-Oriented**: 3-step plans focusing on benefit *utilization*, not claims processing
+- ** Zero Backend**: Fully client-side with localStorage persistence
+- ** Stunning UI**: Glassmorphism, dark mode, and Lottie animations
 
 ---
 
-## ✨ Features
+## Features
 
 <div align="center">
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| 🔍 **AI Classification** | Natural language understanding via Gemini AI | ✅ Live |
-| 💳 **Benefit Cards** | Insurance-style coverage with INR amounts | ✅ Live |
-| 📋 **Action Plans** | 3-step utilization guides (Access → Verify → Use) | ✅ Live |
-| 📍 **Provider Search** | Location-based doctor recommendations | ✅ Live |
-| 🌓 **Dark Mode** | System-aware theme switching | ✅ Live |
-| 💾 **Offline Support** | Recent queries cached locally | ✅ Live |
-| 🎨 **Lottie Animations** | Interactive loading states | ✅ Live |
-| 🔒 **Privacy First** | No data sent to servers | ✅ Live |
+|  **AI Classification** | Natural language understanding via Gemini AI | ✅ Live |
+|  **Benefit Cards** | Insurance-style coverage with INR amounts | ✅ Live |
+|  **Action Plans** | 3-step utilization guides (Access → Verify → Use) | ✅ Live |
+|  **Provider Search** | Location-based doctor recommendations | ✅ Live |
+|  **Dark Mode** | System-aware theme switching | ✅ Live |
+|  **Offline Support** | Recent queries cached locally | ✅ Live |
+|  **Lottie Animations** | Interactive loading states | ✅ Live |
+|  **Privacy First** | No data sent to servers | ✅ Live |
 
 </div>
 
 ---
 
-## 🎯 Demo Flow
+##  Demo Flow
 
 ### 1️⃣ Classification Stage
 ```
@@ -97,6 +97,7 @@ Step 3: Use → Receive cashless treatment, log visit for records
 ### Prerequisites
 - Node.js 16+ installed
 - Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
+- Model - Gemini 2.5 Flash
 
 ### Installation
 
@@ -192,7 +193,7 @@ try {
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Component Tree
 ```
@@ -243,7 +244,7 @@ AIService.generateBenefits(issue, category) → BenefitCard[]
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 <div align="center">
 
@@ -275,7 +276,7 @@ AIService.generateBenefits(issue, category) → BenefitCard[]
 <div align="center">
 
 ### 🌟 Landing Page
-![Landing](https://via.placeholder.com/800x400/6366f1/ffffff?text=Modern+Hero+with+Glassmorphism)
+![Landing](https://trideep1315.sirv.com/Healix%20AI/Screenshot%202025-09-27%20214723.png)
 
 ### 🤖 Classification Interface
 ![Classification](https://via.placeholder.com/800x400/3b82f6/ffffff?text=AI-Powered+Health+Query+Input)
