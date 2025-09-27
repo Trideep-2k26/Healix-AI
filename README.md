@@ -11,7 +11,7 @@
 [![React](https://img.shields.io/badge/React-18-61dafb?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
-![Healix AI Banner](https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1200&h=300&fit=crop&crop=center)
+![Healix AI Banner](https://trideep1315.sirv.com/Healix%20AI/Gemini_Generated_Image_laanp5laanp5laan.png)
 
 [✨ Features](#-features) • [🎯 Demo](#-demo-flow) • [🚀 Quick Start](#-quick-start) • [🧠 AI Integration](#-ai-integration) • [📸 Screenshots](#-screenshots)
 
@@ -279,13 +279,16 @@ AIService.generateBenefits(issue, category) → BenefitCard[]
 ![Landing](https://trideep1315.sirv.com/Healix%20AI/Screenshot%202025-09-27%20214723.png)
 
 ### 🤖 Classification Interface
-![Classification](https://via.placeholder.com/800x400/3b82f6/ffffff?text=AI-Powered+Health+Query+Input)
+![Classification](https://trideep1315.sirv.com/Healix%20AI/Screenshot%202025-09-27%20214912.png)
 
 ### 💳 Benefits Grid
-![Benefits](https://via.placeholder.com/800x400/ec4899/ffffff?text=Insurance+Benefit+Cards)
+![Benefits](https://trideep1315.sirv.com/Healix%20AI/Screenshot%202025-09-27%20214956.png)
 
 ### 📋 Action Plan
-![Action Plan](https://via.placeholder.com/800x400/10b981/ffffff?text=3-Step+Utilization+Guide)
+![Action Plan](https://trideep1315.sirv.com/Healix%20AI/Screenshot%202025-09-27%20215046.png)
+
+### ⚠️ 404 Error
+![404 Error](https://trideep1315.sirv.com/Healix%20AI/Screenshot%202025-09-27%20215719.png)
 
 </div>
 
@@ -389,9 +392,7 @@ MIT License - see [LICENSE](LICENSE) for details
 
 </div>
 
-- **📧 Email**: [Contact Developer](mailto:your-email@example.com)
-- **💬 Discussions**: [GitHub Discussions](https://github.com/Trideep-2k26/Healix-AI/discussions)
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/Trideep-2k26/Healix-AI/issues/new)
+- **📧 Email**: [Contact Developer](mailto:makaltrideep@gmail.com)
 
 ---
 
