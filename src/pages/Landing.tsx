@@ -12,26 +12,26 @@ import { useApp } from '../contexts/AppContext';
 
 const steps = [
   {
-    title: 'Describe Issue',
-    desc: 'Tell us your symptoms or concern in natural language',
+    title: 'Describe Concern',
+    desc: 'Share what you are feeling in plain language (adding location is optional)',
     animation: sickCharacterAnimation,
     color: 'from-blue-500 to-cyan-500'
   },
   {
     title: 'AI Classification',
-    desc: 'Our model maps it to the right medical specialty with reasoning',
+    desc: 'We extract intent & map it to a clinical category to guide relevant coverage-style benefits',
     animation: aiPoweredAnimation,
     color: 'from-purple-500 to-fuchsia-500'
   },
   {
-    title: 'Benefits Generated',
-    desc: 'Personalized benefit cards relevant to your condition',
+    title: 'Review Benefits',
+    desc: 'See mock (Vision / OPD / Mental Health / Dental) or AI-generated benefits with INR coverage values',
     animation: couponDiscountAnimation,
     color: 'from-pink-500 to-rose-500'
   },
   {
-    title: 'Action Plan',
-    desc: 'Clear next steps & supportive care insights',
+    title: 'Select & Plan',
+    desc: 'Pick a benefit → get a safe 3‑step benefit‑centric plan, helper tips & optional nearby doctor suggestions',
     animation: aiBasedAnimation,
     color: 'from-emerald-500 to-teal-500'
   }
@@ -74,7 +74,7 @@ const Landing: React.FC = () => {
               How the Platform Works
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              A guided, intelligence-driven flow from your first symptom description to an actionable wellness pathway.
+              Go from describing a health concern to viewing coverage-style benefits, selecting one, and receiving a safe, benefit‑centric 3‑step action plan with helper tips. Location is optional—add it only if you want nearby doctor suggestions.
             </p>
           </div>
 

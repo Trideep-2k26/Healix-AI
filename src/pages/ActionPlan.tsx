@@ -13,8 +13,10 @@ const ActionPlan: React.FC = () => {
   const [consultants, setConsultants] = useState<any[]>([]);
   const [tips, setTips] = useState<string[]>([]);
   const [inputLocation, setInputLocation] = useState<string>('');
+  const [selectedBenefit, setSelectedBenefit] = useState<any>(null);
+  const [helperCards, setHelperCards] = useState<{ title: string; description: string }[]>([]);
   const [severity, setSeverity] = useState<{ level: 'low' | 'moderate' | 'high'; red_flags: string[]; rationale: string } | null>(null);
-  const [modalities, setModalities] = useState<{ allopathy: string[]; ayurveda: string[]; homeopathy: string[] } | null>(null);
+  // Removed care perspectives (modalities) per new requirements
   const planRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement | null>(null);
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
@@ -33,6 +35,7 @@ const ActionPlan: React.FC = () => {
       setClassification(stateClassification);
       const prefill = stateClassification.location || stateClassification.result?.location || userLocation || '';
       if (prefill) setInputLocation(prefill);
+      if (location.state?.benefit) setSelectedBenefit(location.state?.benefit);
       // Store in recent queries (localStorage capped at 10)
       try {
         const existing = JSON.parse(localStorage.getItem('recentHealthQueries') || '[]');
@@ -76,10 +79,11 @@ const ActionPlan: React.FC = () => {
       setError('Please classify a health concern first');
       return;
     }
-    if (!inputLocation || !inputLocation.trim()) {
-      setError('Please enter your city/location in India to generate your plan and nearby doctors.');
+    if (!selectedBenefit) {
+      setError('Please select a benefit first (go back to Benefits and choose one).');
       return;
     }
+    // Location is now optional; if absent we simply skip nearby doctors
 
     setIsLoading(true);
     setError(null);
@@ -87,27 +91,29 @@ const ActionPlan: React.FC = () => {
     setTips([]);
     setConsultants([]);
     setSeverity(null);
-    setModalities(null);
+  // modalities removed
+  setHelperCards([]);
 
     try {
       const issue = classification.text || classification.result.issue_summary;
       const category = classification.result.category;
 
-      const planResult = await AIService.generateActionPlan(issue, category);
+      // Always generate a 3-step benefit-centric utilization plan (even for mock categories)
+      const planResult = await AIService.generateBenefitCentricActionPlan(issue, selectedBenefit);
       setActionPlan(planResult);
 
       // Fetch other sections in parallel and tolerate partial failures
-      const [sev, tipsRes, mods, docs] = await Promise.allSettled([
+      const [sev, tipsRes, docs, helpers] = await Promise.allSettled([
         AIService.assessSeverity(issue, category),
         AIService.generateProTips(issue, category),
-        AIService.generateModalPerspectives(issue, category),
-        AIService.findNearbyDoctors(category, inputLocation)
+  (inputLocation && inputLocation.trim()) ? AIService.findNearbyDoctors(category, inputLocation) : Promise.resolve([]),
+        AIService.generateHelperCards(issue)
       ]);
 
       if (sev.status === 'fulfilled') setSeverity(sev.value);
       if (tipsRes.status === 'fulfilled') setTips(tipsRes.value);
-      if (mods.status === 'fulfilled') setModalities(mods.value);
-      if (docs.status === 'fulfilled') setConsultants(docs.value);
+  if (docs.status === 'fulfilled') setConsultants(docs.value);
+  if (helpers.status === 'fulfilled') setHelperCards(helpers.value);
 
     } catch (err) {
       setError('Failed to generate action plan. Please try again.');
@@ -219,7 +225,7 @@ const ActionPlan: React.FC = () => {
               <span className="text-xs font-semibold tracking-wide text-[var(--brand-to)]">Personalized Action Plan</span>
             </div>
             <h1 className={`text-3xl md:text-4xl heading-font leading-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Your Next Steps Toward Better Health</h1>
-            <p className={`text-base md:text-lg leading-relaxed max-w-2xl ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>This tailored plan is based on your concern in {classification.result.category.toLowerCase()}. Provide your location to unlock local doctor suggestions and contextual recommendations.</p>
+            <p className={`text-base md:text-lg leading-relaxed max-w-2xl ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>This tailored plan is based on your concern in {classification.result.category.toLowerCase()}. Location is optional—adding it improves nearby doctor suggestions.</p>
           </div>
           <div className="flex flex-col md:flex-row gap-4 md:items-center">
             <div className="flex-1 relative">
@@ -232,11 +238,11 @@ const ActionPlan: React.FC = () => {
                 placeholder="e.g., Indore, Pune, South Delhi"
                 className={`w-full pl-11 pr-4 py-3 rounded-2xl text-sm focus:outline-none transition shadow-sm border ${isDarkMode ? 'bg-white/5 border-white/10 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-[var(--brand-from)]/50' : 'bg-white/70 border-black/10 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[var(--brand-from)]/50'}`}
               />
-              <p className={`mt-2 text-[10px] tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Only used client-side to tailor doctor suggestions (not stored on server).</p>
+              <p className={`mt-2 text-[10px] tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Optional: used client-side only to suggest doctors; you can leave blank.</p>
             </div>
             <button
               onClick={generateActionPlan}
-              disabled={!inputLocation.trim() || isLoading}
+              disabled={isLoading}
               className={`relative rounded-2xl px-8 h-[52px] font-semibold text-sm flex items-center justify-center shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-50 bg-gradient-to-r from-[var(--brand-from)] to-[var(--brand-to)] text-white hover:shadow-lg hover:brightness-[1.05] ${(!inputLocation.trim() || isLoading) ? '!shadow-none' : ''}`}
             >
               {isLoading ? 'Generating…' : 'Generate Plan'}
@@ -333,6 +339,13 @@ const ActionPlan: React.FC = () => {
                 <div className="space-y-4 flex-1 min-w-0">
                   <h2 className={`text-2xl heading-font ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Your Action Plan</h2>
                   <div className={`rounded-xl px-4 py-3 text-sm leading-relaxed border ${isDarkMode ? 'bg-[linear-gradient(145deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] border-white/10 text-gray-300' : 'bg-gradient-to-br from-white to-gray-50 border-black/10 text-gray-600'}`}>Based on your concern: <span className={`${isDarkMode ? 'text-gray-200' : 'text-gray-800'} font-medium`}>{classification.result.issue_summary}</span></div>
+                  {selectedBenefit && (
+                    <div className={`mt-4 rounded-xl px-4 py-3 text-sm leading-relaxed border ${isDarkMode ? 'bg-gradient-to-r from-green-900/20 to-emerald-900/10 border-green-800/40 text-green-300' : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700'}`}>
+                      <p className="font-semibold mb-1 flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" /> Selected Benefit</p>
+                      <p className="font-medium">{selectedBenefit.title}</p>
+                      {selectedBenefit.coverage && <p className="text-xs mt-1 opacity-80">Coverage: {selectedBenefit.coverage}</p>}
+                    </div>
+                  )}
                 </div>
                 <div className="flex md:flex-col gap-4 md:gap-3 items-center md:items-end">
                   <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--brand-from)]/15 to-[var(--brand-to)]/15 border border-[var(--brand-from)]/25">
@@ -363,25 +376,31 @@ const ActionPlan: React.FC = () => {
 
               <div className="grid gap-6 max-w-4xl mx-auto">
                 {actionPlan.map((step: string, index: number) => {
-                  // Extract heading and description from step text
                   const stepNumber = index + 1;
                   const stepText = step.trim();
-                  
-                  // Try to extract a heading from the first sentence or key action
+
+                  // Default heading/description
                   let heading = `Step ${stepNumber}`;
                   let description = stepText;
-                  
-                  // Simple heuristic to create better headings
-                  if (stepText.toLowerCase().includes('schedule') || stepText.toLowerCase().includes('consultation')) {
-                    heading = 'Schedule Consultation';
-                  } else if (stepText.toLowerCase().includes('diagnostic') || stepText.toLowerCase().includes('tests')) {
-                    heading = 'Diagnostic Testing';
-                  } else if (stepText.toLowerCase().includes('treatment') || stepText.toLowerCase().includes('medication')) {
-                    heading = 'Treatment Plan';
-                  } else if (stepText.toLowerCase().includes('follow') || stepText.toLowerCase().includes('monitor')) {
-                    heading = 'Follow-up Care';
-                  } else if (stepText.toLowerCase().includes('lifestyle') || stepText.toLowerCase().includes('diet')) {
-                    heading = 'Lifestyle Changes';
+
+                  // 1. If AI already formatted "Heading: content" use that.
+                  const colonIdx = stepText.indexOf(':');
+                  if (colonIdx > 0 && colonIdx < 60) {
+                    heading = stepText.slice(0, colonIdx).trim();
+                    description = stepText.slice(colonIdx + 1).trim();
+                  } else if (actionPlan.length === 3) {
+                    // 2. Benefit-centric 3-step utilization mapping
+                    const utilizationHeadings = ['Access Benefit', 'Verify & Use Coverage', 'Coverage Applied & Follow-Up'];
+                    heading = utilizationHeadings[index] || heading;
+                  } else {
+                    // 3. Fallback semantic hints for longer generic plans
+                    const lower = stepText.toLowerCase();
+                    if (/(initial|first|book|schedule|consult)/.test(lower)) heading = 'Initial Evaluation';
+                    else if (/(track|log|monitor)/.test(lower)) heading = 'Symptom Tracking';
+                    else if (/(diagnostic|test|investigation)/.test(lower)) heading = 'Diagnostics';
+                    else if (/(lifestyle|sleep|diet|nutrition|exercise)/.test(lower)) heading = 'Lifestyle Foundation';
+                    else if (/(red flag|urgent|seek)/.test(lower)) heading = 'Red Flag Awareness';
+                    else if (/(follow|review|reassess)/.test(lower)) heading = 'Follow-Up Plan';
                   }
 
                   return (
@@ -447,28 +466,24 @@ const ActionPlan: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Modalities */}
-          {modalities && (
-            <div className="space-y-8">
-              <h3 className={`text-lg font-semibold tracking-wide ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Care Perspectives</h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                {([['Allopathy', modalities.allopathy, 'blue'], ['Ayurveda', modalities.ayurveda, 'amber'], ['Homeopathy', modalities.homeopathy, 'emerald']] as const).map(([label, items, color]) => (
-                  <div key={label} className={`relative overflow-hidden rounded-2xl border p-5 shadow group ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20' : 'bg-white/80 border-black/10 hover:bg-white hover:border-black/20'} backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg`}>                    
-                    <div className="relative space-y-3">                      
-                      <p className={`font-semibold text-sm tracking-wide flex items-center gap-2 text-${color}-500 dark:text-${color}-400`}>{label} <span className={`w-1.5 h-1.5 rounded-full bg-${color}-500 dark:bg-${color}-400 animate-pulse`} /></p>
-                      <ul className={`text-xs space-y-1 leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {items.map((item, j) => <li key={j} className="flex gap-2"><span className={`mt-1 w-1.5 h-1.5 rounded-full bg-${color}-500/60 dark:bg-${color}-400/60`} />{item}</li>)}
-                      </ul>
+            {/* Helper Cards */}
+            {helperCards.length > 0 && (
+              <div className="grid sm:grid-cols-2 gap-6 mt-4">
+                {helperCards.map((h, i) => (
+                  <div key={i} className={`rounded-2xl border p-5 shadow relative overflow-hidden ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-black/10'} backdrop-blur-md`}>
+                    <div className="absolute inset-0 pointer-events-none opacity-60 mix-blend-overlay bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.15),transparent_60%)]" />
+                    <div className="relative space-y-2">
+                      <p className={`text-xs font-semibold tracking-wide uppercase ${isDarkMode ? 'text-[var(--brand-from)]/70' : 'text-[var(--brand-to)]/80'}`}>{h.title}</p>
+                      <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{h.description}</p>
                     </div>
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_60%)]" />
                   </div>
                 ))}
               </div>
-              <p className={`text-[11px] tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>These approaches are complementary. Consult qualified professionals before starting new treatments.</p>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Care Perspectives removed per new requirement */}
 
           {/* Feedback */}
           <div className={`rounded-2xl border p-6 shadow flex flex-col md:flex-row md:items-center md:justify-between gap-6 ${isDarkMode ? 'bg-white/5 border-white/10 backdrop-blur-md' : 'bg-white/80 border-black/10 backdrop-blur-md'}`}>

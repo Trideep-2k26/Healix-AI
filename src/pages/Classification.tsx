@@ -41,7 +41,6 @@ const Classification: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) { toast.error('Please describe your health concern'); return; }
-    if (!location.trim()) { toast.error('Please enter your location'); return; }
     // Hide examples after the first attempt (success or failure) similar to chatbot UX
     if (showExamples) setShowExamples(false);
     setIsLoading(true); setError(null); setClassification(null); setUserLocation(location);
@@ -85,7 +84,7 @@ const Classification: React.FC = () => {
               <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Your location (e.g., Delhi, Mumbai, Kolkata)..." className={`flex-1 border-0 focus:ring-0 font-apple ${isDarkMode ? 'bg-transparent text-dark-text placeholder-dark-muted' : 'bg-transparent text-gray-900 placeholder-gray-500'}`} disabled={isLoading} />
             </div>
           </div>
-          <button type="submit" disabled={!query.trim() || !location.trim() || isLoading} className={`btn-red w-full ${isLoading ? '!bg-gray-600 !cursor-not-allowed opacity-70 !shadow-none' : ''}`}>
+          <button type="submit" disabled={!query.trim() || isLoading} className={`btn-red w-full ${isLoading ? '!bg-gray-600 !cursor-not-allowed opacity-70 !shadow-none' : ''}`}>
             <Search className="w-5 h-5" />
             <span>{isLoading ? 'Analyzing...' : 'Analyze Health Concern'}</span>
             <ArrowRight className="w-4 h-4" />

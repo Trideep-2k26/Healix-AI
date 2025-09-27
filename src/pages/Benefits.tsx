@@ -229,7 +229,9 @@ const Benefits: React.FC = () => {
               <div
                 key={index}
                 className={`group relative rounded-2xl shadow-lg p-8 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 cursor-pointer overflow-hidden ${isDarkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700' : 'bg-gradient-to-br from-white to-gray-50 border border-gray-100'}`}
-                onClick={() => navigate('/action-plan', { state: { classification } })}
+                onClick={() => {
+                  navigate('/action-plan', { state: { classification, benefit } });
+                }}
               >
                 {/* Gradient overlay on hover */}
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl ${isDarkMode ? 'bg-gradient-to-br from-blue-900/30 to-purple-900/30' : 'bg-gradient-to-br from-blue-50/50 to-purple-50/50'}`}></div>
@@ -300,7 +302,7 @@ const Benefits: React.FC = () => {
           {/* Action Buttons */}
           <div className="flex justify-center max-w-3xl mx-auto">
             <button
-              onClick={() => navigate('/action-plan', { state: { classification } })}
+              onClick={() => navigate('/action-plan', { state: { classification, benefit: benefits[0] } })}
               className="btn-red py-4 px-12 rounded-2xl font-semibold flex items-center space-x-3 relative overflow-hidden"
             >
               <CheckCircle className="w-5 h-5" />

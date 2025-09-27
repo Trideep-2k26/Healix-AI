@@ -1,9 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { mockBenefits, MOCK_BENEFIT_CATEGORIES } from '../data/mockBenefits';
 
 interface BenefitCard {
   title: string;
   description: string;
-  coverage?: string;
+  coverage?: string; // Always present for mock + AI generated benefits in new flow
   note?: string;
 }
 
@@ -211,105 +212,111 @@ Health concern: "${query}"`;
   }
 
   async generateBenefits(issue: string, category: string): Promise<BenefitCard[]> {
-    const mockCategories = ['Mental Health', 'Dental', 'Vision', 'OPD'];
-    if (mockCategories.includes(category)) {
-      console.log(`AIService: Using mock benefits for ${category}`);
-      return this.generateMockBenefits(category);
+    if (MOCK_BENEFIT_CATEGORIES.includes(category as any)) {
+      return mockBenefits[category].slice(0,4);
     }
-    console.log(`AIService: Using AI benefits generation for ${category}`);
-    let lastError: any;
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    // Dynamic AI benefit generation with INR coverage lines
+    for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         if (!this.useMockAI && this.model) {
-          console.log(`AIService: Benefits generation attempt ${attempt} for ${category}`);
-          const prompt = `Generate 3-4 healthcare benefits for "${issue}" classified as ${category} specialty.
+          const prompt = `You are generating Indian health insurance style BENEFIT CARDS for a patient issue.
+Issue: "${issue}" | Category: ${category}
 
-Return ONLY a valid JSON array with this exact structure:
-[
-  {"title": "Benefit Name", "description": "Detailed benefit description"},
-  {"title": "Another Benefit", "description": "Another detailed description"}
-]
-
-Requirements:
-- Focus on medical treatments, consultations, and wellness programs
-- Be specific to ${category} specialty
-- Each description should be 15-25 words
-- No insurance or payment information
-
-Health issue: "${issue}"
-Medical specialty: ${category}`;
-          const response = await this.callGeminiAPI(prompt);
-          console.log(`AIService: Raw response:`, response.substring(0, 200));
-          let cleanResponse = response.trim();
-          const jsonStart = cleanResponse.indexOf('[');
-          const jsonEnd = cleanResponse.lastIndexOf(']') + 1;
-          if (jsonStart !== -1 && jsonEnd > jsonStart) {
-            cleanResponse = cleanResponse.substring(jsonStart, jsonEnd);
-          }
-          const result = JSON.parse(cleanResponse);
-          if (Array.isArray(result) && result.length > 0) {
-            console.log(`AIService: Successfully generated ${result.length} benefits for ${category}`);
-            return result;
+Create 2–4 benefit objects.
+OUTPUT: ONLY JSON array. Each object: {"title":"..","coverage":"INR wording","description":".."}
+Rules:
+- coverage MUST include realistic INR ranges (e.g., 'up to ₹3,000 per year', '₹800 per consult', '₹2,500 annually').
+- Focus on access, consultations, screenings, therapy, follow-up; NO claims/reimbursement wording.
+- Keep description 14–24 words, benefit-centric.
+- Indian context.
+- Wording should feel like insurance plan inclusions (e.g., 'Covers', 'Up to', 'Includes', 'Allows').
+Return only JSON array.`;
+          const raw = await this.callGeminiAPI(prompt);
+          const trimmed = raw.trim();
+          const start = trimmed.indexOf('['); const end = trimmed.lastIndexOf(']') + 1;
+          const json = start !== -1 && end > start ? trimmed.substring(start,end) : trimmed;
+          const parsed = JSON.parse(json);
+          if (Array.isArray(parsed) && parsed.length >= 2) {
+            return parsed.slice(0,4).map((b: any) => ({
+              title: String(b.title || 'Benefit').trim(),
+              coverage: String(b.coverage || '').trim(),
+              description: String(b.description || '').trim()
+            }));
           }
         }
-        throw new Error(`No valid benefits generated for ${category}`);
-      } catch (error) {
-        console.error(`AIService: Benefits generation attempt ${attempt} failed:`, error);
-        lastError = error;
-        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        throw new Error('Invalid benefit JSON');
+      } catch (e) {
+        if (attempt < 2) await new Promise(r=>setTimeout(r,600));
       }
     }
-    throw new Error(`AI benefits generation failed after 3 attempts for ${category}: ${lastError ? (lastError as Error).message : 'Unknown error'}`);
+    // Fallback generic dynamic template
+    return [
+      { title: `${category} Consultation Access`, coverage: 'Up to ₹900 per consult (3 visits)', description: `Specialist evaluation and follow-up guidance for ${issue.toLowerCase()} related concerns.` },
+      { title: 'Diagnostic Support Package', coverage: 'Baseline tests support up to ₹2,000 annually', description: 'Encourages timely evidence-based investigations only when clinically indicated; avoids unnecessary procedures.' },
+      { title: 'Follow-up & Monitoring', coverage: 'Covers 2 review sessions (₹700 each)', description: 'Structured reassessment to modify plan based on symptom progression or improvement.' }
+    ];
   }
 
-  private generateMockBenefits(category: string): BenefitCard[] {
-    const benefitsMap: Record<string, BenefitCard[]> = {
-      'Mental Health': [
-        { title: 'Counseling & Therapy Sessions', description: 'Professional mental health support including individual counseling, group therapy, and cognitive behavioral therapy.', coverage: 'Individual therapy, group counseling, stress management, anxiety treatment' },
-        { title: 'Mental Health Assessment', description: 'Comprehensive psychological evaluation to assess mental health status and create personalized treatment plans.', coverage: 'Psychological testing, mental health screening, treatment planning' },
-        { title: 'Wellness & Mindfulness Programs', description: 'Programs focused on mental wellness including meditation, yoga, stress reduction techniques.', coverage: 'Meditation sessions, yoga classes, stress management workshops' },
-        { title: '24/7 Mental Health Support', description: 'Round-the-clock crisis intervention and mental health support hotline.', coverage: 'Crisis counseling, emergency mental health support, helpline access' }
-      ],
-      'Dental': [
-        { title: 'Preventive Dental Care', description: 'Regular dental checkups, cleaning, and preventive treatments to maintain oral health.', coverage: 'Dental cleaning, oral examination, fluoride treatment, dental X-rays' },
-        { title: 'Restorative Dental Treatment', description: 'Treatment for dental problems including fillings, root canal therapy, and tooth restoration.', coverage: 'Dental fillings, root canal treatment, crown placement, tooth extraction' },
-        { title: 'Emergency Dental Care', description: '24/7 emergency dental services for urgent dental problems and pain relief.', coverage: 'Emergency dental consultation, pain management, urgent dental procedures' }
-      ],
-      'Vision': [
-        { title: 'Eye Consultation', description: 'Consult with an ophthalmologist for vision-related concerns.' },
-        { title: 'Glasses & Lenses Coverage', description: 'Access to corrective eyewear and optometry services.' }
-      ],
-      'Ophthalmology': [
-        { title: 'Eye Consultation', description: 'Consult with an ophthalmologist for vision-related concerns.' },
-        { title: 'Glasses & Lenses Coverage', description: 'Access to corrective eyewear and optometry services.' }
-      ],
-      'OPD': [
-        { title: 'General Physician Consultation', description: 'Meet a general doctor for primary care checkups.' },
-        { title: 'Specialist Referral', description: 'Referral services for advanced specialty care if needed.' }
-      ],
-      'Orthopedics': [
-        { title: 'Orthopedic Assessment', description: 'Evaluation by an orthopedic specialist for back, neck, and joint pain including baseline tests.', coverage: 'Physical exam, posture analysis, initial imaging recommendations' },
-        { title: 'Physiotherapy & Rehab', description: 'Targeted physiotherapy sessions for musculoskeletal pain and mobility issues.', coverage: 'Stretching, strengthening, posture correction, ergonomic guidance' },
-        { title: 'Pain Management Support', description: 'Guided pain management plan including hot/cold therapy and safe medication advice.', coverage: 'Lifestyle modifications, home program, follow-ups' }
-      ],
-      'Sexual Health': [
-        { title: 'STD Testing & Consultation', description: 'Confidential testing and consultation for sexually transmitted diseases.' },
-        { title: 'Preventive Guidance', description: 'Educational support and safe health practices counseling.' },
-        { title: 'Confidential Care', description: 'Private consultations with specialized healthcare providers.' }
-      ],
-      'Cardiology': [
-        { title: 'Heart Health Assessment', description: 'Comprehensive cardiac screening including ECG and stress tests.', coverage: 'Annual checkup, monitoring, blood pressure tracking' },
-        { title: 'Cardiac Rehabilitation', description: 'Supervised exercise and lifestyle modification programs.', coverage: 'Exercise sessions, dietary counseling, progress monitoring' }
-      ],
-      'Emergency': [
-        { title: 'Emergency Medical Care', description: '24/7 emergency medical services for urgent health situations.', coverage: 'Emergency room access, trauma care, critical care services' },
-        { title: 'Ambulance Services', description: 'Emergency transportation and pre-hospital care.', coverage: 'Ambulance transport, emergency medical technician care' }
-      ]
-    };
+  async generateBenefitCentricActionPlan(issue: string, benefit: BenefitCard): Promise<string[]> {
+    // 3 step plan to avail a selected benefit
+    for (let attempt=1; attempt<=2; attempt++) {
+      try {
+        if (!this.useMockAI && this.model) {
+          const prompt = `Create a STRICT 3-step insurance UTILIZATION action plan (Indian context) to AVAIL the following benefit.
+User Issue: "${issue}"
+Selected Benefit Title: "${benefit.title}"
+Benefit Coverage: "${benefit.coverage || ''}"
 
-    return benefitsMap[category] || [
-      { title: 'General Health Consultation', description: 'Comprehensive health consultation with medical professionals.', coverage: 'Medical consultation, health assessment, treatment recommendations' },
-      { title: 'Preventive Health Screening', description: 'Regular health checkups and early detection screenings.', coverage: 'Basic health checkup, blood tests, preventive screenings' }
+Rules:
+1. Output ONLY JSON array of exactly 3 strings (no object wrapper).
+2. Each step MUST map to this insurance flow:
+   - Step 1 (Access): Booking / locating in-network provider / scheduling test via app, helpline, or partner hospital.
+   - Step 2 (Identification & Use): Present digital card / insurance ID / app QR; confirm coverage limits BEFORE service.
+   - Step 3 (Coverage Application & Follow-up): Service occurs cashless (no reimbursement mention); log visit & plan next review or monitoring.
+3. 14–26 words per step; imperative; Indian context; NO reimbursement, claim filing, paperwork, billing, or payment wording.
+4. Do NOT mention specific medicines, prescriptions, or drug names.
+5. Mention coverage utilization subtly (e.g., 'within your ₹… limit' or 'counts toward your annual allowance').
+Return ONLY the JSON array.`;
+          const raw = await this.callGeminiAPI(prompt);
+          const trimmed = raw.trim();
+            const s = trimmed.indexOf('['); const e = trimmed.lastIndexOf(']')+1;
+          const json = s!==-1 && e>s ? trimmed.substring(s,e) : trimmed;
+          const parsed = JSON.parse(json);
+          if (Array.isArray(parsed) && parsed.length === 3) return parsed.map(x=>String(x));
+        }
+        throw new Error('Invalid plan JSON');
+      } catch(e) { if (attempt<2) await new Promise(r=>setTimeout(r,400)); }
+    }
+    return [
+      `Access: Book an in‑network appointment for '${benefit.title}' via your insurer app or partner hospital; note coverage ${benefit.coverage || 'limit'} beforehand.`,
+      `Identification & Use: Present your digital insurance ID / app QR at reception; confirm inclusion and remaining allowance before the service begins.`,
+      'Coverage Applied: Visit proceeds cashless within allowance; store visit summary and schedule next review to optimize benefit usage.'
+    ];
+  }
+
+  async generateHelperCards(issue: string): Promise<{ title: string; description: string }[]> {
+    for (let attempt=1; attempt<=2; attempt++) {
+      try {
+        if (!this.useMockAI && this.model) {
+          const prompt = `Provide 1-2 brief supportive mini helper cards for issue: "${issue}".
+Format: JSON array of objects with title & description.
+Constraints: description 12–20 words; safety-first; no medicines.
+Return only JSON array.`;
+          const raw = await this.callGeminiAPI(prompt);
+          const trimmed = raw.trim();
+          const s = trimmed.indexOf('['); const e = trimmed.lastIndexOf(']')+1;
+          const json = s!==-1 && e>s ? trimmed.substring(s,e) : trimmed;
+          const parsed = JSON.parse(json);
+          if (Array.isArray(parsed) && parsed.length >=1) {
+            return parsed.slice(0,2).map((c:any)=>({ title:String(c.title||'Helper'), description:String(c.description||'') }));
+          }
+        }
+        throw new Error('Bad helper JSON');
+      } catch(e) { if (attempt<2) await new Promise(r=>setTimeout(r,300)); }
+    }
+    return [
+      { title: 'Quick Relief', description: 'Use balanced hydration, gentle stretching, and rest if discomfort increases; avoid overexertion.' },
+      { title: 'Next Step', description: 'If symptoms worsen or persist beyond a week, seek timely specialist evaluation.' }
     ];
   }
 
