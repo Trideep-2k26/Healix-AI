@@ -1,0 +1,116 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+
+# Environment variants (never commit secrets)
+.env.*
+!.env.example
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Coverage / test reports
+coverage
+*.lcov
+nyc_output
+
+# Caches & build tooling
+.eslintcache
+.stylelintcache
+.cache
+cache
+.tmp
+tmp
+temp
+.parcel-cache
+.vite
+.turbo
+.swc
+
+# Framework / hosting platform outputs
+.vercel
+.netlify
+netlify.toml.local
+
+# Package manager stores
+pnpm-store
+.pnpm-store
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.npm
+
+# Testing / e2e (add if you introduce these tools later)
+cypress/videos
+cypress/screenshots
+playwright-report
+test-results
+
+# OS specific
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# Design / assets (uncomment if you keep large source files locally)
+# *.psd
+# *.ai
+# *.sketch
+# *.fig
+
+# Dependency vulnerability audit files
+audit*.json
+
+# Local notes / scratch
+*.local.md
+notes/
+
+# Logs (extended patterns)
+*.pid
+*.seed
+*.pid.lock
+
+# Prevent accidental lockfile changes from other managers (uncomment if standardizing on npm)
+# yarn.lock
+# pnpm-lock.yaml
+# bun.lockb
+
+# Ignore dump / export data
+*.sqlite
+*.sqlite-journal
+dump.sql
+backup.sql
+
+# Generated assets (if you build and optimize images locally)
+optimized-assets/
+
+# Ignore previous Lottie demo artifacts (if recreated locally)
+*.lottie
+
+# AI / tooling metadata (not needed in production builds)
+.bolt/
+# If you later want to share AI prompt configuration, remove the line above and
+# whitelist a specific file e.g.:
+# !.bolt/config.public.json
